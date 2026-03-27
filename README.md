@@ -13,15 +13,15 @@ A GitHub Action that consults [Deploy Tarot](https://deploytarot.com) before you
 Drop it in. Role and intent are auto-detected from the workflow event and the actor who triggered it.
 
 ```yaml
-- uses: rembish/deploytarot-action@v1
+- uses: rembish/deploytarot-action@v1.1
 ```
 
-The action posts a full card reading to the job summary automatically.
+The action posts a colored verdict banner directly on the run page and a full card reading to the job summary — no clicking required.
 
 ### With explicit role and intent
 
 ```yaml
-- uses: rembish/deploytarot-action@v1
+- uses: rembish/deploytarot-action@v1.1
   with:
     role: senior-dev
     intent: db-migration
@@ -30,7 +30,7 @@ The action posts a full card reading to the job summary automatically.
 ### Block deploys on a bad reading
 
 ```yaml
-- uses: rembish/deploytarot-action@v1
+- uses: rembish/deploytarot-action@v1.1
   with:
     fail_on_abort: "true"
 ```
@@ -40,7 +40,7 @@ The step exits with a non-zero code if the verdict is **Abort Mission**, blockin
 ### Use the verdict downstream
 
 ```yaml
-- uses: rembish/deploytarot-action@v1
+- uses: rembish/deploytarot-action@v1.1
   id: tarot
 
 - name: Deploy
@@ -121,7 +121,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Consult the cards
-        uses: rembish/deploytarot-action@v1
+        uses: rembish/deploytarot-action@v1.1
         with:
           role: devops
           intent: full-release
@@ -142,6 +142,20 @@ GET https://deploytarot.com/api/reading?role=devops&intent=full-release
 ```
 
 Full API reference: [deploytarot.com/api](https://deploytarot.com/api)
+
+---
+
+## Annotations
+
+The verdict appears as a colored banner on the run page:
+
+| Verdict | Color |
+|---|---|
+| Ship It 🚀 | Blue notice |
+| Tread Carefully ⚠️ | Yellow warning |
+| Abort Mission 🛑 | Red error |
+
+The banner shows all three cards and the full verdict text. The job summary contains the complete reading with narratives and a share link.
 
 ---
 
