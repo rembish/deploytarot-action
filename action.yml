@@ -8,9 +8,11 @@ inputs:
       sre, devops, dba, qa, security, product-manager, stakeholder, intern,
       contractor, hr, ceo, cto, ciso, data-scientist, designer, consultant,
       business-analyst, client, cleaning-lady, receptionist, doc-writer, rubber-duck,
-      shadow-it, tarot-reader.
+      shadow-it, ai-agent, tarot-reader.
+      Leave empty to auto-detect: bot actors (dependabot, renovate, copilot, etc.)
+      are recognised as ai-agent; humans default to devops.
     required: false
-    default: devops
+    default: ""
   intent:
     description: >
       What you are deploying. One of: full-release, new-feature, hotfix-prod,
@@ -38,22 +40,23 @@ outputs:
 runs:
   using: composite
   steps:
-    - name: Detect intent
+    - name: Detect context
       id: detect
       shell: bash
       env:
+        INPUT_ROLE: ${{ inputs.role }}
         INPUT_INTENT: ${{ inputs.intent }}
         GH_EVENT: ${{ github.event_name }}
         GH_REF: ${{ github.ref }}
         GH_HEAD_REF: ${{ github.head_ref }}
         GH_ACTOR: ${{ github.actor }}
-      run: ${{ github.action_path }}/detect_intent.sh
+      run: ${{ github.action_path }}/detect_context.sh
 
     - name: Draw the cards
       id: reading
       shell: bash
       env:
-        ROLE: ${{ inputs.role }}
+        ROLE: ${{ steps.detect.outputs.role }}
         INTENT: ${{ steps.detect.outputs.intent }}
         FAIL_ON_ABORT: ${{ inputs.fail_on_abort }}
       run: |
