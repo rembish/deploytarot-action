@@ -13,7 +13,7 @@ A GitHub Action that consults [Deploy Tarot](https://deploytarot.com) before you
 Drop it in. Role and intent are auto-detected from the workflow event and the actor who triggered it.
 
 ```yaml
-- uses: rembish/deploytarot-action@v1.1
+- uses: rembish/deploytarot-action@v1.2
 ```
 
 The action posts a colored verdict banner directly on the run page and a full card reading to the job summary — no clicking required.
@@ -21,7 +21,7 @@ The action posts a colored verdict banner directly on the run page and a full ca
 ### With explicit role and intent
 
 ```yaml
-- uses: rembish/deploytarot-action@v1.1
+- uses: rembish/deploytarot-action@v1.2
   with:
     role: senior-dev
     intent: db-migration
@@ -30,7 +30,7 @@ The action posts a colored verdict banner directly on the run page and a full ca
 ### Block deploys on a bad reading
 
 ```yaml
-- uses: rembish/deploytarot-action@v1.1
+- uses: rembish/deploytarot-action@v1.2
   with:
     fail_on_abort: "true"
 ```
@@ -40,7 +40,7 @@ The step exits with a non-zero code if the verdict is **Abort Mission**, blockin
 ### Use the verdict downstream
 
 ```yaml
-- uses: rembish/deploytarot-action@v1.1
+- uses: rembish/deploytarot-action@v1.2
   id: tarot
 
 - name: Deploy

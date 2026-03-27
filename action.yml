@@ -78,17 +78,17 @@ runs:
         echo "verdict=$VERDICT" >> "$GITHUB_OUTPUT"
         echo "verdict_label=$VERDICT_LABEL" >> "$GITHUB_OUTPUT"
 
-        # Annotation — visible on the run page without clicking into the job
+        # Annotation -- visible on the run page without clicking into the job
         CARDS_ONELINER=$(echo "$RESPONSE" | python3 -c "
-import sys, json
-d = json.load(sys.stdin)
-parts = []
-for c in d['cards']:
-    rev = ' (reversed)' if c['reversed'] else ''
-    parts.append(f\"{c['position_label']}: {c['name']}{rev}\")
-print(' · '.join(parts))
-")
-        ANNOTATION_MSG="${CARDS_ONELINER} — ${VERDICT_TEXT}"
+        import sys, json
+        d = json.load(sys.stdin)
+        parts = []
+        for c in d['cards']:
+            rev = ' (reversed)' if c['reversed'] else ''
+            parts.append(f\"{c['position_label']}: {c['name']}{rev}\")
+        print(' | '.join(parts))
+        ")
+        ANNOTATION_MSG="${CARDS_ONELINER} - ${VERDICT_TEXT}"
         case "$VERDICT" in
           ship-it)        echo "::notice title=${VERDICT_LABEL}::${ANNOTATION_MSG}" ;;
           tread-carefully) echo "::warning title=${VERDICT_LABEL}::${ANNOTATION_MSG}" ;;
