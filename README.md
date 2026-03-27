@@ -149,6 +149,7 @@ Full API reference: [deploytarot.com/api](https://deploytarot.com/api)
 
 - Each run generates a fresh reading. The same role and intent will produce different cards each time.
 - If the service is unreachable, the action emits a warning and exits cleanly (no failure).
+- The API is rate-limited to 60 requests per minute per IP. GitHub Actions runners use different IPs per job, so this limit will not affect normal CI usage.
 - The cards are not real. The anxiety they surface might be.
 
 ---
