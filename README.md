@@ -121,7 +121,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Consult the cards
-        uses: rembish/deploytarot-action@v1.1
+        uses: rembish/deploytarot-action@v1.2
         with:
           role: devops
           intent: full-release
