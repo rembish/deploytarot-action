@@ -1,0 +1,104 @@
+name: Deploy Tarot
+description: "Should I deploy today? Let the cards decide."
+
+inputs:
+  role:
+    description: >
+      Your role. One of: junior-dev, senior-dev, tech-lead, eng-manager, vp-eng,
+      sre, devops, dba, qa, security, product-manager, stakeholder, intern,
+      contractor, hr, ceo, cto, ciso, data-scientist, designer, consultant,
+      business-analyst, client, cleaning-lady, receptionist, doc-writer, rubber-duck,
+      shadow-it, tarot-reader.
+    required: false
+    default: devops
+  intent:
+    description: >
+      What you are deploying. One of: full-release, new-feature, hotfix-prod,
+      quick-fix, refactor, dependency-update, db-migration, infra-change,
+      rollback, config-change, feature-flag, api-release, auth-rewrite,
+      security-patch, performance, mobile-release, ab-test, ai-integration,
+      gdpr-compliance, deprecation, sunset, open-source, redesign, rebranding,
+      public-doc-release, seo-optimization, ipo, just-vibes.
+      Leave empty to auto-detect from the workflow event.
+    required: false
+    default: ""
+  fail_on_abort:
+    description: "Fail the workflow step when the verdict is Abort Mission."
+    required: false
+    default: "false"
+
+outputs:
+  verdict:
+    description: "Machine-readable verdict: ship-it, tread-carefully, or abort-mission."
+    value: ${{ steps.reading.outputs.verdict }}
+  verdict_label:
+    description: "Human-readable verdict label."
+    value: ${{ steps.reading.outputs.verdict_label }}
+
+runs:
+  using: composite
+  steps:
+    - name: Detect intent
+      id: detect
+      shell: bash
+      env:
+        INPUT_INTENT: ${{ inputs.intent }}
+        GH_EVENT: ${{ github.event_name }}
+        GH_REF: ${{ github.ref }}
+        GH_HEAD_REF: ${{ github.head_ref }}
+        GH_ACTOR: ${{ github.actor }}
+      run: ${{ github.action_path }}/detect_intent.sh
+
+    - name: Draw the cards
+      id: reading
+      shell: bash
+      env:
+        ROLE: ${{ inputs.role }}
+        INTENT: ${{ steps.detect.outputs.intent }}
+        FAIL_ON_ABORT: ${{ inputs.fail_on_abort }}
+      run: |
+        RESPONSE=$(curl -sf \
+          "https://deploytarot.com/api/reading?role=${ROLE}&intent=${INTENT}")
+
+        if [ $? -ne 0 ] || [ -z "$RESPONSE" ]; then
+          echo "::warning::Deploy Tarot could not be reached. The cards remain undrawn."
+          exit 0
+        fi
+
+        VERDICT=$(echo "$RESPONSE" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['verdict'])")
+        VERDICT_LABEL=$(echo "$RESPONSE" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['verdict_label'])")
+        VERDICT_TEXT=$(echo "$RESPONSE" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['verdict_text'])")
+        ROLE_LABEL=$(echo "$RESPONSE" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['role'])")
+        INTENT_LABEL=$(echo "$RESPONSE" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['intent'])")
+        SHARE_URL=$(echo "$RESPONSE" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('share_url') or '')")
+
+        echo "verdict=$VERDICT" >> "$GITHUB_OUTPUT"
+        echo "verdict_label=$VERDICT_LABEL" >> "$GITHUB_OUTPUT"
+
+        # Build job summary
+        {
+          echo "## $VERDICT_LABEL"
+          echo ""
+          echo "> $VERDICT_TEXT"
+          echo ""
+          echo "| | Card | Orientation | Reading |"
+          echo "|---|---|---|---|"
+          echo "$RESPONSE" | python3 -c "
+        import sys, json
+        d = json.load(sys.stdin)
+        for c in d['cards']:
+            orientation = 'Reversed' if c['reversed'] else 'Upright'
+            print(f\"| **{c['position_label']}** | {c['name']} | {orientation} | {c['narrative']} |\")
+        "
+          echo ""
+          echo "_Role: **$ROLE_LABEL** · Intent: **$INTENT_LABEL**_"
+          if [ -n "$SHARE_URL" ]; then
+            echo ""
+            echo "[Share this reading]($SHARE_URL)"
+          fi
+        } >> "$GITHUB_STEP_SUMMARY"
+
+        if [ "$FAIL_ON_ABORT" = "true" ] && [ "$VERDICT" = "abort-mission" ]; then
+          echo "::error::The cards say Abort Mission. Set fail_on_abort: false to override."
+          exit 1
+        fi
